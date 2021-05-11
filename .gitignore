@@ -1,0 +1,11 @@
+/target/
+/src/main/resources/amazon.properties
+/bin/
+/files/
+/pictures/
+/node_modules/
+/.settings/
+/src/.settings/
+src/.project
+src/.classpath
+nbactions.xml
