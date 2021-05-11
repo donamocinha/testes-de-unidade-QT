@@ -18,6 +18,7 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
 import java.util.ArrayList;
 
@@ -70,7 +71,6 @@ class EntryControllerTest {
         var comments = new ArrayList<Comment>();
         comments.add(comment);
 
-
         var entry = new Entry("Meu trabalho", 2021L, loggedUser);
         entry.setId(1L);
         entry.setComments(comments);
@@ -84,6 +84,97 @@ class EntryControllerTest {
 
         assertEquals(HttpStatus.CREATED, resp.getStatusCode());
         assertEquals(forum, resp.getBody());
+    }
 
+    @Test
+    void testNewEntry_Unauthorized1() {
+        var course = new Course("prog", "prog.jpg", loggedUser);
+        course.setId(1L);
+
+        var forum = new Forum();
+        forum.setEntries(new ArrayList<Entry>());
+
+        var courseDetails = new CourseDetails();
+        courseDetails.setId(1L);
+        courseDetails.setCourse(course);
+        courseDetails.setForum(forum);
+
+        var comment = new Comment();
+        var comments = new ArrayList<Comment>();
+        comments.add(comment);
+
+        var entry = new Entry("Meu trabalho", 2021L, loggedUser);
+        entry.setId(1L);
+        entry.setComments(comments);
+
+        Mockito.when(authorizationService.checkBackendLogged()).thenReturn(new ResponseEntity<>(HttpStatus.UNAUTHORIZED));
+        Mockito.when(authorizationService.checkAuthorization(course, course.getTeacher())).thenReturn(null);
+        Mockito.when(courseDetailsRepository.findById(courseDetails.getId())).thenReturn(java.util.Optional.of(courseDetails));
+
+        var resp = entryController.newEntry(entry, String.valueOf(courseDetails.getId()));
+
+
+        assertEquals(HttpStatus.UNAUTHORIZED, resp.getStatusCode());
+    }
+
+    @Test
+    void testNewEntry_Unauthorized2() {
+        var course = new Course("prog", "prog.jpg", loggedUser);
+        course.setId(1L);
+
+        var forum = new Forum();
+        forum.setEntries(new ArrayList<Entry>());
+
+        var courseDetails = new CourseDetails();
+        courseDetails.setId(1L);
+        courseDetails.setCourse(course);
+        courseDetails.setForum(forum);
+
+        var comment = new Comment();
+        var comments = new ArrayList<Comment>();
+        comments.add(comment);
+
+        var entry = new Entry("Meu trabalho", 2021L, loggedUser);
+        entry.setId(1L);
+        entry.setComments(comments);
+
+        Mockito.when(authorizationService.checkBackendLogged()).thenReturn(null);
+        Mockito.when(authorizationService.checkAuthorizationUsers(Mockito.any(), Mockito.any())).thenReturn(new ResponseEntity<>(HttpStatus.UNAUTHORIZED));
+        Mockito.when(courseDetailsRepository.findById(courseDetails.getId())).thenReturn(java.util.Optional.of(courseDetails));
+
+        var resp = entryController.newEntry(entry, String.valueOf(courseDetails.getId()));
+
+
+        assertEquals(HttpStatus.UNAUTHORIZED, resp.getStatusCode());
+    }
+
+    @Test
+    void testNewEntry_InvalidNumber() {
+        var course = new Course("prog", "prog.jpg", loggedUser);
+        course.setId(1L);
+
+        var forum = new Forum();
+        forum.setEntries(new ArrayList<Entry>());
+
+        var courseDetails = new CourseDetails();
+        courseDetails.setId(1L);
+        courseDetails.setCourse(course);
+        courseDetails.setForum(forum);
+
+        var comment = new Comment();
+        var comments = new ArrayList<Comment>();
+        comments.add(comment);
+
+        var entry = new Entry("Meu trabalho", 2021L, loggedUser);
+        entry.setId(1L);
+        entry.setComments(comments);
+
+        Mockito.when(authorizationService.checkBackendLogged()).thenReturn(null);
+        Mockito.when(authorizationService.checkAuthorization(course, course.getTeacher())).thenReturn(null);
+        Mockito.when(courseDetailsRepository.findById(courseDetails.getId())).thenReturn(java.util.Optional.of(courseDetails));
+
+        var resp = entryController.newEntry(entry, "aa");
+
+        assertEquals(HttpStatus.BAD_REQUEST, resp.getStatusCode());
     }
 }
