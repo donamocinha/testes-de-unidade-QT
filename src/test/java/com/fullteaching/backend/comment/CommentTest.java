@@ -26,6 +26,15 @@ class CommentTest {
         var message2 = "messa2";
         comment.setMessage(message2);
         assertEquals(message2, comment.getMessage());
+        assertEquals(user.getNickName(), comment.getUser().getNickName());
+        assertEquals(user.getName(), comment.getUser().getName());
+        assertEquals(user.getId(), comment.getUser().getId());
+        assertEquals(user.getCourses(), comment.getUser().getCourses());
+        assertEquals(user.getRoles(), comment.getUser().getRoles());
+        assertEquals(user.getPicture(), comment.getUser().getPicture());
+        assertEquals(user.getRegistrationDate(), comment.getUser().getRegistrationDate());
+
+
     }
 
     @Test

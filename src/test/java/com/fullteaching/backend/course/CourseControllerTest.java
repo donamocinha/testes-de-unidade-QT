@@ -114,11 +114,9 @@ class CourseControllerTest {
         Mockito.when(userRepository.findAllById(userIDs)).thenReturn(users);
         Mockito.when(courseRepository.findByAttenders(users)).thenReturn(courses);
 
-        assertDoesNotThrow(() -> {
-            var resp = courseController.getCourses("a");
-        });
+        var resp = courseController.getCourses("a");
 
-        Mockito.verify(authorizationService, Mockito.times(1)).checkBackendLogged();
+        assertEquals(HttpStatus.BAD_REQUEST, resp.getStatusCode());
     }
 
 
@@ -166,17 +164,24 @@ class CourseControllerTest {
 
     @Test
     void testNewCourse_Success() {
-        var course = new Course("prog", "prog.jpg", loggedUser);
+        var user1 = new User("Victoria", "123", "Vic", "vic.jpg");
+
+        var course = new Course("prog", "prog.jpg", user1);
         course.setId(1L);
 
         Mockito.when(courseRepository.findById(course.getId())).thenReturn(java.util.Optional.of(course));
 
         var resp = courseController.newCourse(course);
 
-        Mockito.verify(courseRepository).save(course);
+        Mockito.verify(courseRepository, Mockito.times(1)).save(course);
+        Mockito.verify(courseRepository, Mockito.times(1)).flush();
+
+        var newCourse = (Course) resp.getBody();
 
         assertEquals(HttpStatus.CREATED, resp.getStatusCode());
-        assertEquals(course, resp.getBody());
+        assertNotNull(newCourse);
+        assertEquals(course, newCourse);
+        assertEquals(newCourse.getTeacher(), loggedUser);
     }
 
     @Test
@@ -188,6 +193,7 @@ class CourseControllerTest {
         Mockito.when(authorizationService.checkBackendLogged()).thenReturn(new ResponseEntity<>(HttpStatus.UNAUTHORIZED));
 
         var resp = courseController.newCourse(course);
+
 
         assertEquals(HttpStatus.UNAUTHORIZED, resp.getStatusCode());
     }
@@ -300,7 +306,6 @@ class CourseControllerTest {
         Mockito.when(courseRepository.findById(course.getId())).thenReturn(java.util.Optional.of(course));
 
 
-
         var resp = courseController.deleteCourse(String.valueOf(course.getId()));
 
         assertEquals(HttpStatus.UNAUTHORIZED, resp.getStatusCode());
@@ -376,6 +381,26 @@ class CourseControllerTest {
     }
 
     @Test
+    void testAddAttenders_Unauthorized2() {
+        var course = new Course("prog", "prog.jpg", loggedUser);
+        course.setId(1L);
+
+        var user = new User("flavia.elias@id.uff.com", "123", "Flavinha", "flavinha.jpg");
+        var users = new ArrayList<User>();
+        users.add(user);
+
+        var attenders = new String[]{user.getName()};
+
+        Mockito.when(authorizationService.checkBackendLogged()).thenReturn(new ResponseEntity<>(HttpStatus.UNAUTHORIZED));
+        Mockito.when(courseRepository.findById(course.getId())).thenReturn(java.util.Optional.of(course));
+        Mockito.when(userRepository.findByNameIn(Mockito.anyCollection())).thenReturn(users);
+
+        var resp = courseController.addAttenders(attenders, String.valueOf(course.getId()));
+
+        assertEquals(HttpStatus.UNAUTHORIZED, resp.getStatusCode());
+    }
+
+    @Test
     void testAddAttenders_InvalidNumber() {
         var course = new Course("prog", "prog.jpg", loggedUser);
         course.setId(1L);
@@ -394,8 +419,6 @@ class CourseControllerTest {
 
         assertEquals(HttpStatus.BAD_REQUEST, resp.getStatusCode());
     }
-
-
 
 
     @Test
@@ -417,5 +440,43 @@ class CourseControllerTest {
         Mockito.verify(courseRepository, Mockito.times(1)).save(course);
 
         assertEquals(HttpStatus.OK, resp.getStatusCode());
+    }
+
+    @Test
+    void testDeleteAttenders_Unauthorized() {
+        var user = new User("flavia.elias@id.uff.com", "123", "Flavinha", "flavinha.jpg");
+        var users = new HashSet<User>();
+        users.add(user);
+
+        var course = new Course("prog", "prog.jpg", loggedUser);
+        course.setId(1L);
+        course.setAttenders(users);
+
+        Mockito.when(authorizationService.checkBackendLogged()).thenReturn(new ResponseEntity<>(HttpStatus.UNAUTHORIZED));
+        Mockito.when(courseRepository.findById(course.getId())).thenReturn(java.util.Optional.of(course));
+        Mockito.when(userRepository.findByNameIn(Mockito.anyCollection())).thenReturn(users);
+
+        var resp = courseController.deleteAttenders(course);
+
+        assertEquals(HttpStatus.UNAUTHORIZED, resp.getStatusCode());
+    }
+
+    @Test
+    void testDeleteAttenders_Unauthorized1() {
+        var user = new User("flavia.elias@id.uff.com", "123", "Flavinha", "flavinha.jpg");
+        var users = new HashSet<User>();
+        users.add(user);
+
+        var course = new Course("prog", "prog.jpg", loggedUser);
+        course.setId(1L);
+        course.setAttenders(users);
+
+        Mockito.when(authorizationService.checkAuthorization(course, course.getTeacher())).thenReturn(new ResponseEntity<>(HttpStatus.UNAUTHORIZED));
+        Mockito.when(courseRepository.findById(course.getId())).thenReturn(java.util.Optional.of(course));
+        Mockito.when(userRepository.findByNameIn(Mockito.anyCollection())).thenReturn(users);
+
+        var resp = courseController.deleteAttenders(course);
+
+        assertEquals(HttpStatus.UNAUTHORIZED, resp.getStatusCode());
     }
 }

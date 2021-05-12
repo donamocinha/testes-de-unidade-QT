@@ -22,7 +22,7 @@ import org.springframework.http.ResponseEntity;
 
 import java.util.ArrayList;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 @RunWith(MockitoJUnitRunner.class)
 class EntryControllerTest {
@@ -71,7 +71,9 @@ class EntryControllerTest {
         var comments = new ArrayList<Comment>();
         comments.add(comment);
 
-        var entry = new Entry("Meu trabalho", 2021L, loggedUser);
+        var user1 = new User("Victoria", "123", "Vic", "vic.jpg");
+
+        var entry = new Entry("Meu trabalho", 2021L, user1);
         entry.setId(1L);
         entry.setComments(comments);
 
@@ -82,8 +84,22 @@ class EntryControllerTest {
 
         Mockito.verify(forumRepository, Mockito.times(1)).save(forum);
 
+        var newForum = (Forum) resp.getBody();
+
         assertEquals(HttpStatus.CREATED, resp.getStatusCode());
-        assertEquals(forum, resp.getBody());
+        assertNotNull(newForum);
+        assertEquals(forum, newForum);
+        assertEquals(1, newForum.getEntries().size());
+
+        assertEquals(entry.getId(), newForum.getEntries().get(0).getId());
+        assertEquals(entry.getTitle(), newForum.getEntries().get(0).getTitle());
+        assertEquals(entry.getDate(), newForum.getEntries().get(0).getDate());
+
+        assertEquals(loggedUser, newForum.getEntries().get(0).getUser());
+        assertNotEquals(0L, newForum.getEntries().get(0).getDate());
+        assertEquals(1, newForum.getEntries().get(0).getComments().size());
+        assertEquals(loggedUser, newForum.getEntries().get(0).getComments().get(0).getUser());
+        assertNotEquals(0L, newForum.getEntries().get(0).getComments().get(0).getDate());
     }
 
     @Test

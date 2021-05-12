@@ -35,6 +35,33 @@
         <plugins>
 
             <plugin>
+                <groupId>org.pitest</groupId>
+                <artifactId>pitest-maven</artifactId>
+                <version>1.6.6</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.pitest</groupId>
+                        <artifactId>pitest-junit5-plugin</artifactId>
+                        <version>0.8</version>
+                    </dependency>
+                </dependencies>
+                <configuration>
+                    <targetClasses>
+                        <param>com.fullteaching.backend.comment.*</param>
+                        <param>com.fullteaching.backend.course.*</param>
+                        <param>com.fullteaching.backend.coursedetails.*</param>
+                        <param>com.fullteaching.backend.entry.*</param>
+                    </targetClasses>
+                    <targetTests>
+                        <param>com.fullteaching.backend.comment.*</param>
+                        <param>com.fullteaching.backend.course.*</param>
+                        <param>com.fullteaching.backend.coursedetails.*</param>
+                        <param>com.fullteaching.backend.entry.*</param>
+                    </targetTests>
+                </configuration>
+            </plugin>
+
+            <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
 
